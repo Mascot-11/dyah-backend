@@ -6,6 +6,7 @@ use App\Models\TattooGallery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class TattooGalleryController extends Controller
 {
@@ -92,33 +93,32 @@ class TattooGalleryController extends Controller
     }
 
 
-    private function uploadToImgBBApi($imageData, $apiKey)
-    {
-        $url = 'https://api.imgbb.com/1/upload';
+    Private function uploadToImgBBApi($imageData, $apiKey)
+{
+    $url = 'https://api.imgbb.com/1/upload';
 
+    $data = [
+        'key' => $apiKey,
+        'image' => base64_encode($imageData),
+    ];
 
-        $data = [
-            'key' => $apiKey,
-            'image' => base64_encode($imageData),
-        ];
+    try {
+        $response = Http::asForm()->post($url, $data);
+        $responseData = json_decode($response->getBody()->getContents(), true);
 
-        try {
-
-            $response = Http::asForm()->post($url, $data);
-            $responseData = json_decode($response->getBody()->getContents(), true);
-
-
-
-
-            if ($response->successful() && isset($responseData['data']['url'])) {
-                return $responseData['data']['url'];
-            }
-
-
-
-        } catch (\Exception $e) {
-
-
+        if ($response->successful() && isset($responseData['data']['url'])) {
+            return $responseData['data']['url'];
+        } else {
+            // Log the full response for debugging
+            Log::error('ImgBB upload failed: ' . $response->body());
         }
+    } catch (\Exception $e) {
+        // Log the exception message and trace
+        Log::error('Exception during ImgBB upload: ' . $e->getMessage());
+        Log::error($e->getTraceAsString());
     }
+
+    return ''; // return empty string if failed
 }
+    }
+
