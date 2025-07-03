@@ -77,7 +77,8 @@ class TattooGalleryController extends Controller
 
     private function uploadImageToImgBB($image)
     {
-        $apiKey = env('IMGBB_API_KEY');
+        $apiKey = config('services.imgbb.key');
+
 
 
         if (!$apiKey) {
